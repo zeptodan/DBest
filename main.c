@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <stdbool.h>
-#include <stdlib.h>
 #include <string.h>
-typedef struct {
-    char input[1024];
-    size_t input_length;
-} InputBuffer;
+#include "main.h"
+const char *const keywords[] = {
+    "select"
+};
+const keyword_length = sizeof(keywords) / sizeof(keywords[0]);
 InputBuffer *new_input_buffer() {
     InputBuffer *input_buffer = malloc(sizeof(InputBuffer));
     input_buffer->input_length = 0;
@@ -24,13 +24,8 @@ int main(int argc, char *argv[]) {
     while (true){
         printf("db >");
         read_input(input_buffer);
-        if (strcmp(input_buffer->input, ".exit") == 0) {
-            free_input_buffer(input_buffer);
-            exit(EXIT_SUCCESS);
-        }
-        else {
-            printf("Unrecognized command '%s'.\n", input_buffer->input);
-        }
+        //parser
+        parser(input_buffer);
     }
     return 0;
 }
