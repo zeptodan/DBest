@@ -1,3 +1,4 @@
+#include<stdio.h>
 #include<string.h>
 #include<ctype.h>
 #include "main.h"
@@ -25,27 +26,29 @@ Statement* tokenizer(InputBuffer* buffer){
     while (current < buffer->input_length){
         char character = buffer->input[current];
         if (character == '('){
-            add(statement,TOKEN_LEFTPAREN,None,'(');
+            add(statement,TOKEN_LEFTPAREN,None,"(");
         }
         else if (character == ')'){
-            add(statement,TOKEN_RIGHTPAREN,None,')');
+            add(statement,TOKEN_RIGHTPAREN,None,")");
         }
         else if (character == ','){
-            add(statement,TOKEN_COMMA,None,',');
+            add(statement,TOKEN_COMMA,None,",");
         }
         else if (character == ' '){
-            add(statement,TOKEN_WHITESPACE,None,' ');
+            add(statement,TOKEN_WHITESPACE,None," ");
         }
         else if (character == '='){
-            add(statement,TOKEN_Eq,None,'=');
+            add(statement,TOKEN_Eq,None,"=");
         }
         else if (isdigit(character)){
             int index = current + 1;
             while(isdigit(buffer->input[index])){
                 index++;
             }
-            char* value = malloc(sizeof(char)*(index-current));
+            char* value = malloc(sizeof(char)*(index-current+1));
             strncpy(value,buffer->input+current,index-current);
+            value[index-current]=0;
+            current=index-1;
             add(statement,TOKEN_NUMBER,None,value);
         }
         else if (isalpha(character)){
@@ -53,15 +56,25 @@ Statement* tokenizer(InputBuffer* buffer){
             while(isalpha(buffer->input[index])){
                 index++;
             }
-            char* value = malloc(sizeof(char)*(index-current));
+            char* value = malloc(sizeof(char)*(index-current+1));
             strncpy(value,buffer->input+current,index-current);
+            value[index-current]=0;
+            current = index-1;
             for (int i =0; i<keyword_length;i++){
-                if(value==keywords[i]){
-                    
+                if(strcmp(value,keywords[i].value)==0){
+                    add(statement,TOKEN_KEYWORD,keywords[i].keyword,"");
+                    break;
+                }
+                else if(i==keyword_length-1){
+                    add(statement,TOKEN_STRING,None,value);
                 }
             }
-            add(statement,TOKEN_NUMBER,None,value);
         }
+        else{
+            statement->length = -1;
+            break;
+        }
+        current++;
     }
     return statement;
 }

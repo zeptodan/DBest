@@ -46,8 +46,12 @@ typedef enum {
     On,
     None
 } Keyword;
-const char *const keywords[];
-const size_t keyword_length;
+typedef struct {
+    Keyword keyword;
+    char* value;
+} KeyToken;
+extern const KeyToken keywords[];
+extern const size_t keyword_length;
 typedef struct {
     TokenType type;
     union {

@@ -2,10 +2,11 @@
 #include <stdbool.h>
 #include <string.h>
 #include "main.h"
-const char *const keywords[] = {
-    "select"
+const KeyToken keywords[] = {
+    {.keyword=Select,.value="select"},
+    {.keyword=Insert,.value="insert"}
 };
-const keyword_length = sizeof(keywords) / sizeof(keywords[0]);
+const size_t keyword_length = sizeof(keywords) / sizeof(keywords[0]);
 InputBuffer *new_input_buffer() {
     InputBuffer *input_buffer = malloc(sizeof(InputBuffer));
     input_buffer->input_length = 0;
