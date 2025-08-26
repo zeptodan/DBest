@@ -1,7 +1,7 @@
 #include<stdlib.h>
 typedef enum {
     TOKEN_KEYWORD,
-    TOKEN_COL,
+    TOKEN_IDEN,
     TOKEN_LEFTPAREN,
     TOKEN_RIGHTPAREN,
     TOKEN_NUMBER,
@@ -18,6 +18,7 @@ typedef enum {
     TOKEN_Minus,
     TOKEN_WHITESPACE,
     TOKEN_COMMA,
+    TOKEN_SEMI,
     TOKEN_UNDEFINED
 } TokenType;
 typedef enum {
@@ -69,5 +70,57 @@ typedef struct {
     char input[1024];
     size_t input_length;
 } InputBuffer;
+typedef enum {
+    LITERAL,
+    IDEN,
+    OP
+} Exprtype;
+typedef struct {
+    Exprtype type;
+    union {
+        char* value;
+        char* ident;
+        struct {
+            char op;
+            struct Exprnode* left;
+            struct Exprnode* right;
+        } operator;
+    };
+} Exprnode;
+typedef struct {
+    Exprnode* exprnode;
+} Wherenode;
+typedef struct {
+    char** cols;
+    int col_count;
+    char* table;
+    Wherenode* where;
+} Selectnode;
+typedef struct {
+    char** cols;
+    int col_count;
+    char* table;
+    Wherenode* where;
+} Insertnode;
+typedef struct {
+    char** cols;
+    int col_count;
+    char* table;
+    Wherenode* where;
+} Createnode;
+typedef struct {
+    Token token;
+    union {
+        Selectnode select;
+        Insertnode insert;
+        Createnode create;
+    };
+} ASTnode;
+typedef struct {
+    Token* tokens;
+    size_t length;
+    size_t index;
+} Parser;
 int parser(InputBuffer* buffer);
 Statement* tokenizer(InputBuffer* buffer);
+ASTnode* AST(Parser* parser);

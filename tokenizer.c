@@ -35,10 +35,39 @@ Statement* tokenizer(InputBuffer* buffer){
             add(statement,TOKEN_COMMA,None,",");
         }
         else if (character == ' '){
-            add(statement,TOKEN_WHITESPACE,None," ");
+            current++;
+            continue;
+            //add(statement,TOKEN_WHITESPACE,None," ");
+        }
+        else if (character == ';'){
+            add(statement,TOKEN_SEMI,None,";");
         }
         else if (character == '='){
             add(statement,TOKEN_Eq,None,"=");
+        }
+        else if (character == '\''){
+            current++;
+            int index = current +1;
+            while(isalpha(buffer->input[index])){
+                index++;
+            }
+            char* value = malloc(sizeof(char)*(index-current+1));
+            strncpy(value,buffer->input+current,index-current);
+            value[index-current]=0;
+            current = index;
+            add(statement,TOKEN_IDEN,None,value);
+        }
+        else if (character == '\"'){
+            current++;
+            int index = current +1;
+            while(isalpha(buffer->input[index])){
+                index++;
+            }
+            char* value = malloc(sizeof(char)*(index-current+1));
+            strncpy(value,buffer->input+current,index-current);
+            value[index-current]=0;
+            current = index;
+            add(statement,TOKEN_STRING,None,value);
         }
         else if (isdigit(character)){
             int index = current + 1;
@@ -66,9 +95,12 @@ Statement* tokenizer(InputBuffer* buffer){
                     break;
                 }
                 else if(i==keyword_length-1){
-                    add(statement,TOKEN_STRING,None,value);
+                    add(statement,TOKEN_IDEN,None,value);
                 }
             }
+        }
+        else if (character == '*'){
+            add(statement,TOKEN_IDEN,None,"*");
         }
         else{
             statement->length = -1;
