@@ -21,13 +21,33 @@ void read_input(InputBuffer *input_buffer) {
 void free_input_buffer(InputBuffer *input_buffer) {
     free(input_buffer);
 }
+void load_catalog(){
+    FILE* file = fopen("catalog.meta","rb");
+    if (!file){
+        return;
+    }
+    fread(&catalog,sizeof(Catalog),1,file);
+    fclose(file);
+    return;
+}
+void save_catalog(){
+    FILE* file = fopen("catalog.meta","wb");
+    if (!file){
+        return;
+    }
+    fwrite(&catalog,sizeof(Catalog),1,file);
+    fclose(file);
+    return;
+}
 int main(int argc, char *argv[]) {
+    load_catalog();
     InputBuffer *input_buffer = new_input_buffer();
     while (true){
         printf("db >");
         read_input(input_buffer);
         //parser
-        parser(input_buffer);
+        ASTnode* ast = parser(input_buffer);
+        planner(ast);
     }
     return 0;
 }

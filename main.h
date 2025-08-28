@@ -79,6 +79,7 @@ typedef struct {
     Exprtype type;
     union {
         char* value;
+        int int_value;
         char* ident;
         struct {
             char op;
@@ -97,16 +98,19 @@ typedef struct {
     Wherenode* where;
 } Selectnode;
 typedef struct {
-    char** cols;
+    Exprnode* cols;
     int col_count;
     char* table;
-    Wherenode* where;
 } Insertnode;
 typedef struct {
-    char** cols;
+    char* name;
+    char* type;
+    int index;
+} Column;
+typedef struct {
+    Column* cols;
     int col_count;
     char* table;
-    Wherenode* where;
 } Createnode;
 typedef struct {
     Token token;
@@ -121,6 +125,35 @@ typedef struct {
     size_t length;
     size_t index;
 } Parser;
-int parser(InputBuffer* buffer);
+typedef enum{
+    INDEX_PLAN,
+    SEQ_PLAN,
+    INSERT_PLAN,
+    CREATE_PLAN
+} Plantype;
+typedef struct{
+    Plantype type;
+    char* index;
+    union {
+        Selectnode select;
+        Insertnode insert;
+        Createnode create;
+    };
+} Planner;
+typedef struct {
+    char* table_name;
+    char* index;
+    char** col_names;
+    char** types;
+    int col_count;
+} Table;
+typedef struct {
+    int table_count;
+    Table** tables;
+} Catalog;
+extern Catalog catalog;
+ASTnode* parser(InputBuffer* buffer);
 Statement* tokenizer(InputBuffer* buffer);
 ASTnode* AST(Parser* parser);
+void save_catalog();
+int planner(ASTnode* ast);
