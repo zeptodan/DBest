@@ -36,7 +36,7 @@ typedef enum {
     And,
     Or,
     PrimaryKey,
-    Table,
+    Keyword_Table,
     Database,
     Int,
     Varchar,
@@ -104,11 +104,11 @@ typedef struct {
 } Insertnode;
 typedef struct {
     char* name;
-    char* type;
+    Keyword type;
     int index;
 } Column;
 typedef struct {
-    Column* cols;
+    Column** cols;
     int col_count;
     char* table;
 } Createnode;

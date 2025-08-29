@@ -5,7 +5,12 @@
 const KeyToken keywords[] = {
     {.keyword=Select,.value="select"},
     {.keyword=Insert,.value="insert"},
-    {.keyword=From,.value="from"}
+    {.keyword=From,.value="from"},
+    {.keyword=Create,.value="create"},
+    {.keyword=Keyword_Table,.value="table"},
+    {.keyword=Into,.value="into"},
+    {.keyword=Where,.value="where"},
+    {.keyword=Values,.value="values"}
 };
 const size_t keyword_length = sizeof(keywords) / sizeof(keywords[0]);
 InputBuffer *new_input_buffer() {
