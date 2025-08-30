@@ -26,6 +26,17 @@ ASTnode* parser(InputBuffer* buffer) {
         printf("not good");
         return 0;
     }
-    printf("type: %i\nkeyword: %i\ncol count: %i\ntable: %s\ncol: %s\nwhere: %p\n",ast->token.type,ast->token.data.keyword,ast->select.col_count,ast->select.table,ast->select.cols[0],ast->select.where);
+    if (ast->token.data.keyword == Select){
+        printf("col count: %i\ntable: %s\ncol: %s\nwhere: %p\n",ast->select.col_count,ast->select.table,ast->select.cols[0],ast->select.where);
+
+    }
+    else if (ast->token.data.keyword == Create)
+    {
+        printf("col count: %i\ntable: %s\ncol name: %scol type: %i\n",ast->create.col_count,ast->create.table,ast->create.cols[0]->name,ast->create.cols[0]->type);
+    }
+    else if (ast->token.data.keyword == Insert)
+    {
+        printf("col count: %i\ntable: %s\ncol: %i\n",ast->insert.col_count,ast->insert.table,ast->insert.cols[0]->type);
+    }
     return ast;
 }

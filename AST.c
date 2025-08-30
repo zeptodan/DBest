@@ -84,7 +84,7 @@ ASTnode* parse_create(Parser* parser){
     while (token->type != TOKEN_RIGHTPAREN){
         token = advance(parser);
         Column* col = malloc(sizeof(Column));
-        if (token->type != TOKEN_STRING){
+        if (token->type != TOKEN_IDEN){
             return NULL;
         }
         col->name = token->data.value;
@@ -95,7 +95,7 @@ ASTnode* parse_create(Parser* parser){
         col->type = token->data.keyword;
         token = advance(parser);
         col->index = 0;
-        if (token->type == TOKEN_COMMA){
+        if (token->type == TOKEN_COMMA || token->type == TOKEN_RIGHTPAREN){
             continue;
         }
         if (token->type != TOKEN_KEYWORD || token->data.keyword != PrimaryKey){
@@ -130,11 +130,24 @@ ASTnode* parse_insert(Parser* parser){
     if (token->type != TOKEN_LEFTPAREN){
         return NULL;
     }
-    while (token != TOKEN_RIGHTPAREN){
+    while (token->type != TOKEN_RIGHTPAREN){
         token = advance(parser);
-
+        ast->insert.col_count++;
+        Exprnode* node = malloc(sizeof(Exprnode));
+        if (token->type == TOKEN_STRING){
+            node->type = LITERAL;
+            node->value = token->data.value;
+        }
+        else if (token->type == TOKEN_NUMBER){
+            node->type = NUMBER;
+            node->value = token->data.value;
+        }
+        else {
+            return NULL;
+        }
+        ast->insert.cols = realloc(ast->insert.cols,ast->insert.col_count * sizeof(Exprnode*));
+        ast->insert.cols[ast->insert.col_count-1] = node;
     }
-    //TO DO:
     return ast;
 }
 ASTnode* AST(Parser* parser){
@@ -148,7 +161,7 @@ ASTnode* AST(Parser* parser){
             ast = parse_select(parser);
             break;
         case Insert:
-            //ast = parse_select(parser);
+            ast = parse_insert(parser);
             break;
         case Create:
             ast = parse_create(parser);

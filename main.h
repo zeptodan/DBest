@@ -72,6 +72,7 @@ typedef struct {
 } InputBuffer;
 typedef enum {
     LITERAL,
+    NUMBER,
     IDEN,
     OP
 } Exprtype;
@@ -98,7 +99,7 @@ typedef struct {
     Wherenode* where;
 } Selectnode;
 typedef struct {
-    Exprnode* cols;
+    Exprnode** cols;
     int col_count;
     char* table;
 } Insertnode;
