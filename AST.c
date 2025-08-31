@@ -94,11 +94,10 @@ ASTnode* parse_create(Parser* parser){
         }
         col->type = token->data.keyword;
         token = advance(parser);
-        col->index = 0;
         if (token->type == TOKEN_COMMA || token->type == TOKEN_RIGHTPAREN){
-            continue;
+            col->index = 0;
         }
-        if (token->type != TOKEN_KEYWORD || token->data.keyword != PrimaryKey){
+        else if (token->type != TOKEN_KEYWORD || token->data.keyword != PrimaryKey){
             return NULL;
         }
         col->index = 1;
@@ -143,6 +142,13 @@ ASTnode* parse_insert(Parser* parser){
             node->value = token->data.value;
         }
         else {
+            return NULL;
+        }
+        token = advance(parser);
+        if (token->type == TOKEN_RIGHTPAREN){
+            continue;
+        }
+        if (token->type != TOKEN_COMMA){
             return NULL;
         }
         ast->insert.cols = realloc(ast->insert.cols,ast->insert.col_count * sizeof(Exprnode*));
