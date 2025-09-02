@@ -109,7 +109,7 @@ typedef struct {
     int index;
 } Column;
 typedef struct {
-    Column** cols;
+    Column* cols;
     int col_count;
     char* table;
 } Createnode;
@@ -143,9 +143,7 @@ typedef struct{
 } Planner;
 typedef struct {
     char* table_name;
-    char* index;
-    char** col_names;
-    char** types;
+    Column* cols;
     int col_count;
 } Table;
 typedef struct {
@@ -157,4 +155,8 @@ ASTnode* parser(InputBuffer* buffer);
 Statement* tokenizer(InputBuffer* buffer);
 ASTnode* AST(Parser* parser);
 void save_catalog();
-int planner(ASTnode* ast);
+Planner* planner(ASTnode* ast);
+int executor(Planner* planner);
+int select_data(Selectnode* node);
+int insert_data(Insertnode* node);
+int create_table(Createnode* node);

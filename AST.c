@@ -102,8 +102,9 @@ ASTnode* parse_create(Parser* parser){
         }
         col->index = 1;
         ast->create.col_count++;
-        ast->create.cols = realloc(ast->create.cols,ast->create.col_count * sizeof(Column*));
-        ast->create.cols[ast->create.col_count-1] = col;
+        ast->create.cols = realloc(ast->create.cols,ast->create.col_count * sizeof(Column));
+        ast->create.cols[ast->create.col_count-1] = *col;
+        free(col);
     }
     return ast;
 }

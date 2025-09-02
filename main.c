@@ -34,7 +34,25 @@ void load_catalog(){
     if (!file){
         return;
     }
-    fread(&catalog,sizeof(Catalog),1,file);
+    fread(&catalog.table_count,sizeof(int),1,file);
+    catalog.tables = malloc(catalog.table_count* sizeof(Table*));
+    for (int i =0;i < catalog.table_count;i++){
+        catalog.tables[i] = malloc(sizeof(Table));
+        fread(&catalog.tables[i]->col_count,sizeof(int),1,file);
+        size_t len;
+        fread(&len,sizeof(size_t),1,file);
+        catalog.tables[i]->table_name = malloc(len*sizeof(char));
+        fread(catalog.tables[i]->table_name,sizeof(char),len,file);
+        catalog.tables[i]->cols = malloc(catalog.tables[i]->col_count * sizeof(Column));
+        for (int j = 0;j< catalog.tables[i]->col_count;j++){
+            fread(&catalog.tables[i]->cols[j].index,sizeof(int),1,file);
+            fread(&catalog.tables[i]->cols[j].type,sizeof(Keyword),1,file);
+            size_t len2;
+            fread(&len2,sizeof(size_t),1,file);
+            catalog.tables[i]->cols[j].name = malloc(len2 * sizeof(char));
+            fread(catalog.tables[i]->cols[j].name,sizeof(char),len2,file);
+        }
+    }
     fclose(file);
     return;
 }
@@ -43,7 +61,20 @@ void save_catalog(){
     if (!file){
         return;
     }
-    fwrite(&catalog,sizeof(Catalog),1,file);
+    fwrite(&catalog.table_count,sizeof(int),1,file);
+    for (int i =0;i < catalog.table_count;i++){
+        fwrite(&catalog.tables[i]->col_count,sizeof(int),1,file);
+        size_t len = strlen(catalog.tables[i]->table_name)+1;
+        fwrite(&len,sizeof(size_t),1,file);
+        fwrite(catalog.tables[i]->table_name,sizeof(char),len,file);
+        for (int j = 0;j< catalog.tables[i]->col_count;j++){
+            fwrite(&catalog.tables[i]->cols[j].index,sizeof(int),1,file);
+            fwrite(&catalog.tables[i]->cols[j].type,sizeof(Keyword),1,file);
+            size_t len2  = strlen(catalog.tables[i]->cols[j].name)+1;
+            fwrite(&len2,sizeof(size_t),1,file);
+            fwrite(catalog.tables[i]->cols[j].name,sizeof(char),len2,file);
+        }
+    }
     fclose(file);
     return;
 }
@@ -55,7 +86,8 @@ int main(int argc, char *argv[]) {
         read_input(input_buffer);
         //parser
         ASTnode* ast = parser(input_buffer);
-        planner(ast);
+        Planner* plan = planner(ast);
+        executor(plan);
     }
     return 0;
 }

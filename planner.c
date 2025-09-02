@@ -1,6 +1,6 @@
 #include<stdio.h>
 #include"main.h"
-int planner(ASTnode* ast){
+Planner* planner(ASTnode* ast){
     Planner* planner = malloc(sizeof(Planner));
     switch (ast->token.data.keyword){
         case Select:
@@ -13,4 +13,5 @@ int planner(ASTnode* ast){
             planner->type = CREATE_PLAN;
             planner->create = ast->create;
     }
+    return planner;
 }
