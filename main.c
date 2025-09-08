@@ -54,6 +54,7 @@ void load_catalog(){
         }
     }
     fclose(file);
+    //printf("tables: %i\nname: %s\ncols: %i\n%s\n%s\n",catalog.table_count,catalog.tables[0]->table_name,catalog.tables[0]->col_count,catalog.tables[0]->cols[0].name,catalog.tables[0]->cols[1].name);
     return;
 }
 void save_catalog(){

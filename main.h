@@ -1,4 +1,5 @@
 #include<stdlib.h>
+#define PAGE_SIZE 4096
 typedef enum {
     TOKEN_KEYWORD,
     TOKEN_IDEN,
@@ -150,6 +151,28 @@ typedef struct {
     int table_count;
     Table** tables;
 } Catalog;
+typedef struct {
+    int page_id;
+    int slot_count;
+    int free_space_offset;
+    int free_slot_count;
+} Pageheader;
+typedef struct { 
+    short offset;
+    short length;
+    char is_deleted;
+} Slot;
+typedef struct {
+    char bytes[PAGE_SIZE];
+} Page;
+typedef struct {
+    int page_id;
+    int free_bytes;
+} FreeSpaceEntry;
+typedef struct {
+    int entry_count;
+    FreeSpaceEntry* entries;
+} FreeSpaceMap;
 extern Catalog catalog;
 ASTnode* parser(InputBuffer* buffer);
 Statement* tokenizer(InputBuffer* buffer);
