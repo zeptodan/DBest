@@ -155,7 +155,6 @@ typedef struct {
     int page_id;
     int slot_count;
     int free_space_offset;
-    int free_slot_count;
 } Pageheader;
 typedef struct { 
     short offset;
@@ -183,3 +182,7 @@ int executor(Planner* planner);
 int select_data(Selectnode* node);
 int insert_data(Insertnode* node);
 int create_table(Createnode* node);
+Page* load_page(char* table,int pageno);
+int save_page(char* table,int pageno,Page* page);
+FreeSpaceMap* load_fsm(char* table);
+int save_fsm(char* table,FreeSpaceMap* fsm);
