@@ -162,7 +162,8 @@ typedef struct {
     char is_deleted;
 } Slot;
 typedef struct {
-    char bytes[PAGE_SIZE];
+    Pageheader header;
+    char bytes[PAGE_SIZE - sizeof(Pageheader)];
 } Page;
 typedef struct {
     int page_id;
