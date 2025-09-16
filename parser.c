@@ -36,7 +36,7 @@ ASTnode* parser(InputBuffer* buffer) {
     }
     else if (ast->token.data.keyword == Insert)
     {
-        printf("col count: %i\ntable: %s\ncol: %i\n",ast->insert.col_count,ast->insert.table,ast->insert.cols[0]->type);
+        printf("col count: %i\ntable: %s\ncol: %i\n",ast->insert.col_count,ast->insert.table,ast->insert.cols[1]->type);
     }
     return ast;
 }

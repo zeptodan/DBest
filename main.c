@@ -79,8 +79,17 @@ void save_catalog(){
     fclose(file);
     return;
 }
+void display_catalog(){
+    for(int i = 0;i < catalog.table_count;i++){
+        printf("\ntable name: %s\ncol count: %i\n",catalog.tables[i]->table_name,catalog.tables[i]->col_count);
+        for (int j =0;j < catalog.tables[i]->col_count;j++){
+            printf(" %s type: %i\n",catalog.tables[i]->cols[j].name,catalog.tables[i]->cols[j].type);
+        }
+    }
+}
 int main(int argc, char *argv[]) {
     load_catalog();
+    display_catalog();
     InputBuffer *input_buffer = new_input_buffer();
     while (true){
         printf("db >");
@@ -88,6 +97,11 @@ int main(int argc, char *argv[]) {
         //parser
         ASTnode* ast = parser(input_buffer);
         Planner* plan = planner(ast);
+        if (!plan){
+            printf("error in planner\n");
+            continue;
+        }
+        printf("planner type: %i\n",plan->type);
         executor(plan);
     }
     return 0;

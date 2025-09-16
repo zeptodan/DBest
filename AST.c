@@ -146,10 +146,7 @@ ASTnode* parse_insert(Parser* parser){
             return NULL;
         }
         token = advance(parser);
-        if (token->type == TOKEN_RIGHTPAREN){
-            continue;
-        }
-        if (token->type != TOKEN_COMMA){
+        if (token->type != TOKEN_COMMA && token->type != TOKEN_RIGHTPAREN){
             return NULL;
         }
         ast->insert.cols = realloc(ast->insert.cols,ast->insert.col_count * sizeof(Exprnode*));

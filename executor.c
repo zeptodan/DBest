@@ -8,5 +8,7 @@ int executor(Planner* planner){
         create_table(&planner->create);
         break;
         case INSERT_PLAN:
+        insert_data(&planner->insert);
+        break;
     }
 }
