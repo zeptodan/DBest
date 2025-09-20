@@ -7,9 +7,48 @@ Token* peek(Parser* parser){
 Token* advance(Parser* parser){
     return parser->index < parser->length? &parser->tokens[parser->index++]: NULL;
 }
-Exprnode* parse_where(Parser* parser){
-    Exprnode* expr;
-    return expr;
+Wherenode* parse_where(Parser* parser){
+    Wherenode* node = malloc(sizeof(Wherenode));
+    Token* token = advance(parser);
+    if (token->type != TOKEN_IDEN){
+        return NULL;
+    }
+    node->column = token->data.value;
+    token = advance(parser);
+    switch(token->type){
+        case TOKEN_Eq:
+            node->op = OP_EQ;
+            break;
+        case TOKEN_Neq:
+            node->op = OP_NEQ;
+            break;
+        case TOKEN_Gt:
+            node->op = OP_GT;
+            break;
+        case TOKEN_GtEq:
+            node->op = OP_GTEQ;
+            break;
+        case TOKEN_Lt:
+            node->op = OP_LT;
+            break;
+        case TOKEN_LtEq:
+            node->op = OP_LTEQ;
+            break;
+        default:
+            return NULL;
+    }
+    token = advance(parser);
+    if (token->type != TOKEN_STRING || token->type != TOKEN_NUMBER){
+        return NULL;
+    }
+    node->value = token->data.value;
+    if (token->type == TOKEN_STRING)
+        node->type = NUMBER;
+    else
+        node->type= LITERAL;
+    node->left = NULL;
+    node->right = NULL;
+    return node;
 }
 ASTnode* parse_select(Parser* parser){
     ASTnode* ast = malloc(sizeof(ASTnode));
@@ -53,14 +92,14 @@ ASTnode* parse_select(Parser* parser){
     ast->select.table = token->data.value;
     token = advance(parser);
     if (token->type == TOKEN_SEMI){
+        ast->select.where = malloc(sizeof(Wherenode));
+        ast->select.where->type = NONE;
         return ast;
     }
     else if (token->type != TOKEN_KEYWORD || token->data.keyword != Where){
         return NULL;
     }
-    ast->select.where = malloc(sizeof(Wherenode));
-    ast->select.where->exprnode = malloc(sizeof(Exprnode));
-    ast->select.where->exprnode = parse_where(parser);
+    ast->select.where = parse_where(parser);
     return ast;
 }
 ASTnode* parse_create(Parser* parser){

@@ -75,7 +75,8 @@ typedef enum {
     LITERAL,
     NUMBER,
     IDEN,
-    OP
+    OP,
+    NONE
 } Exprtype;
 typedef struct {
     Exprtype type;
@@ -90,8 +91,14 @@ typedef struct {
         } operator;
     };
 } Exprnode;
+typedef enum { OP_EQ, OP_NEQ, OP_LT, OP_GT, OP_LTEQ, OP_GTEQ } Operator;
 typedef struct {
-    Exprnode* exprnode;
+    Exprtype type;
+    char* column;
+    char* value;
+    Wherenode* left;
+    Wherenode* right;
+    Operator op;
 } Wherenode;
 typedef struct {
     char** cols;

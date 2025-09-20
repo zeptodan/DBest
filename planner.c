@@ -7,21 +7,37 @@ Planner* planner(ASTnode* ast){
         case Select:
             for (int i =0;i < catalog.table_count;i++){
                 if (strcmp(catalog.tables[i]->table_name,ast->select.table) ==0){
-                    if (strcmp(ast->select.cols[0],"*")==0){
-                        break;
-                    }
                     int exists =0;
-                    for (int j =0;j< ast->select.col_count ;i++){
-                        for (int k = 0;k < catalog.tables[i]->col_count;k++){
-                            if(strcmp(catalog.tables[i]->cols[k].name,ast->select.cols[j])==0){
-                                exists=1;
+                    if (strcmp(ast->select.cols[0],"*")!=0){
+                        for (int j =0;j< ast->select.col_count ;i++){
+                            for (int k = 0;k < catalog.tables[i]->col_count;k++){
+                                if(strcmp(catalog.tables[i]->cols[k].name,ast->select.cols[j])==0){
+                                    exists=1;
+                                    break;
+                                }
+                            }
+                            if (exists==0){
+                                return NULL;
+                            }
+                        }
+                    }
+                    exists= 0;
+                    if (ast->select.where->type != NONE){
+                        for (int j =0; j < catalog.tables[i]->col_count;j++){
+                            if (strcmp(catalog.tables[i]->cols[j].name,ast->select.where->column)==0){
+                                if (catalog.tables[i]->cols[j].type == Int && ast->select.where->type != NUMBER)
+                                    return NULL;
+                                else if (catalog.tables[i]->cols[j].type == Varchar && ast->select.where->type != LITERAL)
+                                    return NULL;
+                                exists = 1;
                                 break;
                             }
                         }
-                        if (exists==0){
+                        if (exists == 0){
                             return NULL;
                         }
                     }
+                    break;
                 }
                 if (i == catalog.table_count -1){
                     return NULL;

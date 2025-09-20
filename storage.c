@@ -11,8 +11,31 @@ int create_table(Createnode* node){
     catalog.tables[catalog.table_count-1] = table;
     save_catalog();
 }
+int select_page(Page* page,Selectnode* node){
+    for ( int i = 0; i < page->header.slot_count;i++){
+        Slot* slot = (Slot*)((char*)page + PAGE_SIZE - sizeof(Slot)*(i+1));
+        if(slot->is_deleted == 'Y')
+            continue;
+        for (int j = 0;j < catalog.table_count;j++){
+            if(strcmp(catalog.tables[j]->table_name,node->table)==0){
+                for (int k = 0;k < catalog.tables[j]->col_count;k++){
+                    //catalog.tables[j]->cols.
+                }
+            }
+        }
+    }
+}
 int select_data(Selectnode* node){
-
+    char* table_name = malloc(strlen(node->table)+strlen(".db") + 1);
+    strcpy(table_name,node->table);
+    strcat(table_name,".db");
+    FILE* file = fopen(table_name,"rb");
+    fseek(file,0,SEEK_END);
+    int total_pages = ftell(file) / PAGE_SIZE;
+    for (int i = 0;i < total_pages;i++){
+        Page* page = load_page(table_name,i);
+        select_page(page,node);
+    }
 }
 Slot* get_slot(Page* page,int byte_size){
     for (int i = 0;i< page->header.slot_count;i++){
@@ -34,8 +57,11 @@ int insert_record(Insertnode* node,Page* page, Slot* slot,char* table){
             offset += sizeof(int);
         }
         else{
-            memcpy((char*)page + slot->offset + offset,node->cols[i]->value,strlen(node->cols[i]->value)+1);
-            offset+=strlen(node->cols[i]->value)+1;
+            short len = strlen(node->cols[i]->value);
+            memcpy((char*)page + slot->offset + offset,&len,sizeof(short));
+            offset += sizeof(short);
+            memcpy((char*)page + slot->offset + offset,node->cols[i]->value,len);
+            offset+=len;
         }
     }
     printf("offset: %i\nend: %i\npage id: %i\nsize of slot %i\n",page->header.free_space_offset,PAGE_SIZE - sizeof(Slot)*(page->header.slot_count + 1),page->header.page_id,sizeof(Slot));
@@ -75,7 +101,7 @@ int insert_data(Insertnode* node){
             byte_size+= sizeof(node->cols[i]->int_value);
         }
         else{
-            byte_size+= strlen(node->cols[i]->value) +1;
+            byte_size+= strlen(node->cols[i]->value) + sizeof(short);
         }
     }
     printf("byte size: %i\n",byte_size);
