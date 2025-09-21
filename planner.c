@@ -9,7 +9,7 @@ Planner* planner(ASTnode* ast){
                 if (strcmp(catalog.tables[i]->table_name,ast->select.table) ==0){
                     int exists =0;
                     if (strcmp(ast->select.cols[0],"*")!=0){
-                        for (int j =0;j< ast->select.col_count ;i++){
+                        for (int j =0;j< ast->select.col_count;j++){
                             for (int k = 0;k < catalog.tables[i]->col_count;k++){
                                 if(strcmp(catalog.tables[i]->cols[k].name,ast->select.cols[j])==0){
                                     exists=1;
@@ -25,10 +25,14 @@ Planner* planner(ASTnode* ast){
                     if (ast->select.where->type != NONE){
                         for (int j =0; j < catalog.tables[i]->col_count;j++){
                             if (strcmp(catalog.tables[i]->cols[j].name,ast->select.where->column)==0){
-                                if (catalog.tables[i]->cols[j].type == Int && ast->select.where->type != NUMBER)
+                                if (catalog.tables[i]->cols[j].type == Int && ast->select.where->type != NUMBER){
+                                    printf("expected int in where clause");
                                     return NULL;
-                                else if (catalog.tables[i]->cols[j].type == Varchar && ast->select.where->type != LITERAL)
+                                }
+                                else if (catalog.tables[i]->cols[j].type == Varchar && ast->select.where->type != LITERAL){
+                                    printf("expected string in where clause");
                                     return NULL;
+                                }
                                 exists = 1;
                                 break;
                             }

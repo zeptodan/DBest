@@ -38,11 +38,11 @@ Wherenode* parse_where(Parser* parser){
             return NULL;
     }
     token = advance(parser);
-    if (token->type != TOKEN_STRING || token->type != TOKEN_NUMBER){
+    if (token->type != TOKEN_STRING && token->type != TOKEN_NUMBER){
         return NULL;
     }
     node->value = token->data.value;
-    if (token->type == TOKEN_STRING)
+    if (token->type != TOKEN_STRING)
         node->type = NUMBER;
     else
         node->type= LITERAL;
@@ -67,7 +67,7 @@ ASTnode* parse_select(Parser* parser){
     }
     else {
         while(1){
-            if (token->type!=IDEN){
+            if (token->type!=TOKEN_IDEN){
                 return NULL;
             }
             ast->select.col_count++;
@@ -100,6 +100,9 @@ ASTnode* parse_select(Parser* parser){
         return NULL;
     }
     ast->select.where = parse_where(parser);
+    if (ast->select.where== NULL){
+        return NULL;
+    }
     return ast;
 }
 ASTnode* parse_create(Parser* parser){
@@ -179,7 +182,7 @@ ASTnode* parse_insert(Parser* parser){
         }
         else if (token->type == TOKEN_NUMBER){
             node->type = NUMBER;
-            node->value = token->data.value;
+            node->int_value = atoi(token->data.value);
         }
         else {
             return NULL;

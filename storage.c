@@ -11,16 +11,132 @@ int create_table(Createnode* node){
     catalog.tables[catalog.table_count-1] = table;
     save_catalog();
 }
+int check_num(int num1,int num2,Operator op){
+    switch(op){
+        case OP_EQ:
+            return (num1 == num2) ? 0: -1;
+            break;
+        case OP_NEQ:
+            return (num1 != num2) ? 0: -1;
+            break;
+        case OP_GT:
+            return (num1 > num2) ? 0: -1;
+            break;
+        case OP_GTEQ:
+            return (num1 >= num2) ? 0: -1;
+            break;
+        case OP_LT:
+            return (num1 < num2) ? 0: -1;
+            break;
+        case OP_LTEQ:
+            return (num1 <= num2) ? 0: -1;
+            break;
+        default:
+            return -1;
+    }
+}
+int check_where(Page* page,int* row,Wherenode* node,int where_no){
+    if (node->type == NONE){
+        return 0;
+    }
+    if (node->type == NUMBER){
+        int num = *(int*)((char*)page + row[where_no]);
+        return check_num(num,atoi(node->value),node->op);
+    }
+    else{
+        short len = *(short*)((char*)page + row[where_no]);
+        char* str = malloc(len + 1);
+        memcpy(str,((char*)page + row[where_no]+sizeof(short)),len);
+        str[len] = '\0';
+        switch(node->op){
+            case OP_EQ:
+                return strcmp(str,node->value)==0?0:-1;
+                break;
+            case OP_NEQ:
+                return strcmp(str,node->value)!=0?0:-1;
+                break;
+            default:
+                return -1;
+        }
+    }
+}
 int select_page(Page* page,Selectnode* node){
+    int is_star = 0;
+    if (strcmp(node->cols[0],"*")==0){
+        is_star =1;
+    }
     for ( int i = 0; i < page->header.slot_count;i++){
         Slot* slot = (Slot*)((char*)page + PAGE_SIZE - sizeof(Slot)*(i+1));
         if(slot->is_deleted == 'Y')
             continue;
         for (int j = 0;j < catalog.table_count;j++){
             if(strcmp(catalog.tables[j]->table_name,node->table)==0){
+                int* row_pointers = malloc(catalog.tables[j]->col_count * sizeof(int));
+                int offset = 0;
                 for (int k = 0;k < catalog.tables[j]->col_count;k++){
-                    //catalog.tables[j]->cols.
+                    row_pointers[k] = slot->offset + offset;
+                    if (catalog.tables[j]->cols[k].type == Int){
+                        offset += sizeof(int);
+                    }
+                    else{
+                        offset += sizeof(short) + *(short*)((char*)page + slot->offset + offset);
+                    }
                 }
+                int* col_no = malloc(node->col_count * sizeof(int));
+                for (int k = 0;k < node->col_count;k++){
+                    for (int l = 0;l < catalog.tables[j]->col_count;l++){
+                        if(strcmp(node->cols[k],catalog.tables[j]->cols[l].name)==0){
+                            col_no[k] = l;
+                            break;
+                        }
+                    }
+                }
+                int where_no = -1;
+                if (node->where->type != NONE){
+                    for (int k = 0;k < catalog.tables[j]->col_count;k++){
+                        if(strcmp(node->where->column,catalog.tables[j]->cols[k].name)==0){
+                            where_no = k;
+                            break;
+                        }
+                    }
+                }
+                if (check_where(page,row_pointers,node->where,where_no) ==0){
+                    //print
+                    if (is_star == 1){
+                        for (int k = 0; k < catalog.tables[j]->col_count;k++){
+                            if (catalog.tables[j]->cols[k].type == Int){
+                                int num = *(int*)((char*)page + row_pointers[k]);
+                                int num2;
+                                memcpy(&num2,(char*)page + row_pointers[k],sizeof(int));
+                                printf("%i  ",num);
+                            }
+                            else{
+                                short len = *(short*)((char*)page + row_pointers[k]);
+                                char* str = malloc(len + 1);
+                                memcpy(str,((char*)page + row_pointers[k]+sizeof(short)),len);
+                                str[len] = '\0';
+                                printf("%s  ",str);
+                            }
+                        }
+                    }
+                    else{
+                        for (int k = 0; k < node->col_count;k++){
+                            if (catalog.tables[j]->cols[col_no[k]].type == Int){
+                                int num = *(int*)((char*)page + row_pointers[col_no[k]]);
+                                printf("%i  ",num);
+                            }
+                            else{
+                                short len = *(short*)((char*)page + row_pointers[col_no[k]]);
+                                char* str = malloc(len + 1);
+                                memcpy(str,((char*)page + row_pointers[col_no[k]]+sizeof(short)),len);
+                                str[len] = '\0';
+                                printf("%s  ",str);
+                            }
+                        }
+                    }
+                    printf("\n");
+                }
+                break;
             }
         }
     }
@@ -32,6 +148,7 @@ int select_data(Selectnode* node){
     FILE* file = fopen(table_name,"rb");
     fseek(file,0,SEEK_END);
     int total_pages = ftell(file) / PAGE_SIZE;
+    fclose(file);
     for (int i = 0;i < total_pages;i++){
         Page* page = load_page(table_name,i);
         select_page(page,node);
@@ -64,7 +181,6 @@ int insert_record(Insertnode* node,Page* page, Slot* slot,char* table){
             offset+=len;
         }
     }
-    printf("offset: %i\nend: %i\npage id: %i\nsize of slot %i\n",page->header.free_space_offset,PAGE_SIZE - sizeof(Slot)*(page->header.slot_count + 1),page->header.page_id,sizeof(Slot));
     return save_page(table,page->header.page_id,page);
 }
 Page* insert_at_end(Insertnode* node,char* table,int byte_size){
@@ -74,14 +190,12 @@ Page* insert_at_end(Insertnode* node,char* table,int byte_size){
     page->header.page_id = ftell(file) / PAGE_SIZE;
     fclose(file);
     page->header.slot_count = 1;
-    page->header.free_space_offset = sizeof(Pageheader);
+    page->header.free_space_offset = sizeof(Pageheader) + byte_size;
     Slot* slot = (Slot*)((char*)page + PAGE_SIZE - sizeof(Slot)*(page->header.slot_count));
     slot->is_deleted = 'N';
     slot->offset = sizeof(Pageheader);
     slot->length = byte_size;
-    printf("page offset in function: %i\n",page->header.free_space_offset);
     insert_record(node,page,slot,table);
-    printf("page offset in function after: %i\n",page->header.free_space_offset);
     return page;
 }
 int insert_data(Insertnode* node){
@@ -91,10 +205,7 @@ int insert_data(Insertnode* node){
     strcpy(table_fsm_name,node->table);
     strcat(table_name,".db");
     strcat(table_fsm_name,".fsm");
-    printf("table name: %s\n",table_name);
-    printf("table fsm name: %s\n",table_fsm_name);
     FreeSpaceMap* fsm = load_fsm(table_fsm_name);
-    printf("fsm count: %i\n",fsm->entry_count);
     int byte_size = 0;
     for (int i = 0;i < node->col_count;i++){
         if (node->cols[i]->type == NUMBER){
@@ -104,14 +215,10 @@ int insert_data(Insertnode* node){
             byte_size+= strlen(node->cols[i]->value) + sizeof(short);
         }
     }
-    printf("byte size: %i\n",byte_size);
     for (int i =0;i < fsm->entry_count;i++){
         if (byte_size < fsm->entries[i].free_bytes){
-            printf("fsm entry count %i\n fsm id %i\n free bytes%i\n",fsm->entry_count,fsm->entries[0].page_id,fsm->entries[0].free_bytes);
             Page* page = load_page(table_name,fsm->entries[i].page_id);
-            printf("offset: %i\nend: %i\n",page->header.free_space_offset,PAGE_SIZE - sizeof(Slot)*(page->header.slot_count));
             Slot* slot = get_slot(page,byte_size);
-            printf("offset: %i\nend: %i\n",page->header.free_space_offset,PAGE_SIZE - sizeof(Slot)*(page->header.slot_count));
             if (!slot && byte_size + sizeof(Slot) > PAGE_SIZE - sizeof(Slot)*(page->header.slot_count) - page->header.free_space_offset){
                 free(page);
                 continue;
@@ -124,7 +231,6 @@ int insert_data(Insertnode* node){
                 slot->offset = page->header.free_space_offset;
                 page->header.free_space_offset += byte_size;
                 page->header.slot_count++;
-                printf("offset: %i\nend: %i\n",page->header.free_space_offset,PAGE_SIZE - sizeof(Slot)*(page->header.slot_count));
             }
             else{
                 slot->is_deleted = 'N';
@@ -150,7 +256,6 @@ int insert_data(Insertnode* node){
         }
     }
     Page* page = insert_at_end(node,table_name,byte_size);
-    printf("page id: %i\n",page->header.page_id);
     fsm->entries = realloc(fsm->entries,fsm->entry_count+1);
     fsm->entries[fsm->entry_count].page_id = page->header.page_id;
     free(page);

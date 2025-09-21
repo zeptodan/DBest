@@ -97,11 +97,10 @@ int main(int argc, char *argv[]) {
         //parser
         ASTnode* ast = parser(input_buffer);
         Planner* plan = planner(ast);
-        if (!plan){
+        if (plan == NULL){
             printf("error in planner\n");
             continue;
         }
-        printf("planner type: %i\n",plan->type);
         executor(plan);
     }
     return 0;

@@ -1,3 +1,5 @@
 main.exe
 catalog.meta
 .vscode/
+*.db
+*.fsm

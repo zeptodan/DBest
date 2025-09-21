@@ -5,15 +5,15 @@ ASTnode* parser(InputBuffer* buffer) {
     if (statement->length == -1){
         return NULL;
     }
-    for (int i = 0;i < statement->length;i++){
-        printf("type: %d ",statement->tokens[i].type);
-        if (statement->tokens[i].type==TOKEN_KEYWORD){
-            printf("keyword: %d\n",statement->tokens[i].data.keyword);
-        }
-        else{
-            printf("value: %s\n",statement->tokens[i].data.value);
-        }
-    }
+    // for (int i = 0;i < statement->length;i++){
+    //     printf("type: %d ",statement->tokens[i].type);
+    //     if (statement->tokens[i].type==TOKEN_KEYWORD){
+    //         printf("keyword: %d\n",statement->tokens[i].data.keyword);
+    //     }
+    //     else{
+    //         printf("value: %s\n",statement->tokens[i].data.value);
+    //     }
+    // }
     Parser* parser = malloc(sizeof(Parser));
     parser->length = statement->length;
     parser->index = 0;
@@ -26,17 +26,17 @@ ASTnode* parser(InputBuffer* buffer) {
         printf("not good");
         return 0;
     }
-    if (ast->token.data.keyword == Select){
-        printf("col count: %i\ntable: %s\ncol: %s\nwhere: %p\n",ast->select.col_count,ast->select.table,ast->select.cols[0],ast->select.where);
+    // if (ast->token.data.keyword == Select){
+    //     printf("col count: %i\ntable: %s\ncol: %s\nwhere: %p\n",ast->select.col_count,ast->select.table,ast->select.cols[0],ast->select.where);
 
-    }
-    else if (ast->token.data.keyword == Create)
-    {
-        printf("col count: %i\ntable: %s\ncol name: %scol type: %i\n",ast->create.col_count,ast->create.table,ast->create.cols[0].name,ast->create.cols[0].type);
-    }
-    else if (ast->token.data.keyword == Insert)
-    {
-        printf("col count: %i\ntable: %s\ncol: %i\n",ast->insert.col_count,ast->insert.table,ast->insert.cols[1]->type);
-    }
+    // }
+    // else if (ast->token.data.keyword == Create)
+    // {
+    //     printf("col count: %i\ntable: %s\ncol name: %scol type: %i\n",ast->create.col_count,ast->create.table,ast->create.cols[0].name,ast->create.cols[0].type);
+    // }
+    // else if (ast->token.data.keyword == Insert)
+    // {
+    //     printf("col count: %i\ntable: %s\ncol: %i\n",ast->insert.col_count,ast->insert.table,ast->insert.cols[1]->type);
+    // }
     return ast;
 }

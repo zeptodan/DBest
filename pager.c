@@ -9,7 +9,6 @@ Page* load_page(char* table,int pageno){
     fseek(file,PAGE_SIZE*pageno,SEEK_SET);
     fread(page,PAGE_SIZE,1,file);
     fclose(file);
-    printf("pageno: %i\npage offset %i\n",pageno,page->header.free_space_offset);
     return page;
 }
 int save_page(char* table,int pageno,Page* page){
@@ -23,7 +22,6 @@ int save_page(char* table,int pageno,Page* page){
     fseek(file,PAGE_SIZE*pageno,SEEK_SET);
     fwrite(page,PAGE_SIZE,1,file);
     fclose(file);
-    printf("pageno: %i\npage offset %i\n",pageno,page->header.free_space_offset);
     return 0;
 }
 FreeSpaceMap* load_fsm(char* table){
@@ -35,7 +33,6 @@ FreeSpaceMap* load_fsm(char* table){
         return fsm;
     }
     fread(&fsm->entry_count,sizeof(int),1,file);
-    printf("loading fsm: %i\n",fsm->entry_count);
     fsm->entries = malloc(fsm->entry_count*sizeof(FreeSpaceEntry));
     for(int i = 0;i< fsm->entry_count;i++){
         fread(&fsm->entries[i],sizeof(FreeSpaceEntry),1,file);
@@ -48,7 +45,6 @@ int save_fsm(char* table,FreeSpaceMap* fsm){
     if (!file){
         return -1;
     }
-    printf("saving fsm: %i\n",fsm->entry_count);
     fwrite(&fsm->entry_count,sizeof(int),1,file);
     for(int i = 0;i< fsm->entry_count;i++){
         fwrite(&fsm->entries[i],sizeof(FreeSpaceEntry),1,file);
