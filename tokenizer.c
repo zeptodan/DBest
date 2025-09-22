@@ -45,12 +45,45 @@ Statement* tokenizer(InputBuffer* buffer){
         else if (character == '='){
             add(statement,TOKEN_Eq,None,"=");
         }
+        else if (character == '!'){
+            if (buffer->input[current+1] == '='){
+                add(statement,TOKEN_Neq,None,"!=");
+                current++;
+            }
+            else{
+                return NULL;
+            }
+        }
+        else if (character == '>'){
+            if (buffer->input[current+1] == '='){
+                add(statement,TOKEN_GtEq,None,">=");
+                current++;
+            }
+            else if (buffer->input[current+1] == ' '){
+                add(statement,TOKEN_Gt,None,">");
+            }
+            else{
+                return NULL;
+            }
+        }
+        else if (character == '<'){
+            if (buffer->input[current+1] == '='){
+                add(statement,TOKEN_LtEq,None,"<=");
+                current++;
+            }
+            else if (buffer->input[current+1] == ' '){
+                add(statement,TOKEN_Lt,None,"<");
+            }
+            else{
+                return NULL;
+            }
+        }
         else if (character == '\''){
-            current++;
             int index = current +1;
-            while(isalpha(buffer->input[index])){
+            while(buffer->input[index] != '\''){
                 index++;
             }
+            current++;
             char* value = malloc(sizeof(char)*(index-current+1));
             strncpy(value,buffer->input+current,index-current);
             value[index-current]=0;
@@ -58,11 +91,11 @@ Statement* tokenizer(InputBuffer* buffer){
             add(statement,TOKEN_IDEN,None,value);
         }
         else if (character == '\"'){
-            current++;
             int index = current +1;
-            while(isalpha(buffer->input[index])){
+            while(buffer->input[index] != '\"'){
                 index++;
             }
+            current++;
             char* value = malloc(sizeof(char)*(index-current+1));
             strncpy(value,buffer->input+current,index-current);
             value[index-current]=0;
