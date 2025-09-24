@@ -122,11 +122,17 @@ typedef struct {
     char* table;
 } Createnode;
 typedef struct {
+ char* table;
+ char* name;
+ char* column;
+} Createindexnode;
+typedef struct {
     Token token;
     union {
         Selectnode select;
         Insertnode insert;
         Createnode create;
+        Createindexnode createindex;
     };
 } ASTnode;
 typedef struct {
@@ -138,7 +144,8 @@ typedef enum{
     INDEX_PLAN,
     SEQ_PLAN,
     INSERT_PLAN,
-    CREATE_PLAN
+    CREATE_PLAN,
+    CREATE_INDEX_PLAN
 } Plantype;
 typedef struct{
     Plantype type;
@@ -147,6 +154,7 @@ typedef struct{
         Selectnode select;
         Insertnode insert;
         Createnode create;
+        Createindexnode createindex;
     };
 } Planner;
 typedef struct {

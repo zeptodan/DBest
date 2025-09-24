@@ -12,7 +12,9 @@ const KeyToken keywords[] = {
     {.keyword=Where,.value="where"},
     {.keyword=Values,.value="values"},
     {.keyword=Int,.value="int"},
-    {.keyword=Varchar,.value="varchar"}
+    {.keyword=Varchar,.value="varchar"},
+    {.keyword=Index,.value="index"},
+    {.keyword=On,.value="on"}
 };
 const size_t keyword_length = sizeof(keywords) / sizeof(keywords[0]);
 Catalog catalog;
@@ -96,6 +98,10 @@ int main(int argc, char *argv[]) {
         read_input(input_buffer);
         //parser
         ASTnode* ast = parser(input_buffer);
+        if (ast == NULL){
+            printf("error in parser\n");
+            continue;
+        }
         Planner* plan = planner(ast);
         if (plan == NULL){
             printf("error in planner\n");

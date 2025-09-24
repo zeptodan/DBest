@@ -11,6 +11,9 @@ int create_table(Createnode* node){
     catalog.tables[catalog.table_count-1] = table;
     save_catalog();
 }
+int create_index(Createindexnode* node){
+    
+}
 int check_num(int num1,int num2,Operator op){
     switch(op){
         case OP_EQ:

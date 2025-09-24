@@ -111,8 +111,43 @@ ASTnode* parse_create(Parser* parser){
     Token* token = advance(parser);
     ast->create.col_count =0;
     ast->create.cols=NULL;
-    if (token->type != TOKEN_KEYWORD || token->data.keyword != Keyword_Table){
+    if (token->type != TOKEN_KEYWORD || (token->data.keyword != Keyword_Table && token->data.keyword != Index)){
         return NULL;
+    }
+    if (token->data.keyword == Index){
+        ast->token.data.keyword = Index;
+        token = advance(parser);
+        if (token->type != TOKEN_IDEN){
+            return NULL;
+        }
+        ast->createindex.name = token->data.value;
+        token = advance(parser);
+        if (token->type != TOKEN_KEYWORD || token->data.keyword != On){
+            return NULL;
+        }
+        token = advance(parser);
+        if (token->type != TOKEN_IDEN){
+            return NULL;
+        }
+        ast->createindex.table = token->data.value;
+        token = advance(parser);
+        if (token->type != TOKEN_LEFTPAREN){
+            return NULL;
+        }
+        token = advance(parser);
+        if (token->type != TOKEN_IDEN){
+            return NULL;
+        }
+        ast->createindex.column = token->data.value;
+        token = advance(parser);
+        if (token != TOKEN_RIGHTPAREN){
+            return NULL;
+        }
+        token = advance(parser);
+        if (token != TOKEN_SEMI){
+            return NULL;
+        }
+        return ast;
     }
     token = advance(parser);
     if (token == NULL || token->type != TOKEN_IDEN){

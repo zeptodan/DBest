@@ -86,6 +86,26 @@ Planner* planner(ASTnode* ast){
             planner->type = CREATE_PLAN;
             planner->create = ast->create;
             break;
+        case Index:
+            planner->type = CREATE_INDEX_PLAN;
+            for (int i = 0;i < catalog.table_count;i++){
+                if (strcmp(ast->createindex.table,catalog.tables[i]->table_name) == 0){
+                    for (int j = 0; j < catalog.tables[i]->col_count;j++){
+                        if (strcmp(ast->createindex.column,catalog.tables[i]->cols[j].name)==0){
+                            break;
+                        }
+                        if (j == catalog.tables[i]->col_count - 1){
+                            return NULL;
+                        }
+                    }
+                    break;
+                }
+                if (i == catalog.table_count -1){
+                    return NULL;
+                }
+            }
+            planner->createindex = ast->createindex;
+            break;
     }
     return planner;
 }

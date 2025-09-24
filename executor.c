@@ -10,6 +10,9 @@ int executor(Planner* planner){
         case CREATE_PLAN:
         create_table(&planner->create);
         break;
+        case CREATE_INDEX_PLAN:
+        create_index(&planner->createindex);
+        break;
         case INSERT_PLAN:
         insert_data(&planner->insert);
         break;

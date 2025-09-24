@@ -22,10 +22,6 @@ ASTnode* parser(InputBuffer* buffer) {
     ASTnode* ast = AST(parser);
     free(parser->tokens);
     free(parser);
-    if (ast == NULL){
-        printf("not good");
-        return 0;
-    }
     // if (ast->token.data.keyword == Select){
     //     printf("col count: %i\ntable: %s\ncol: %s\nwhere: %p\n",ast->select.col_count,ast->select.table,ast->select.cols[0],ast->select.where);
 
