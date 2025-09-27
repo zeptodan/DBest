@@ -12,6 +12,29 @@ int create_table(Createnode* node){
     save_catalog();
 }
 int create_index(Createindexnode* node){
+    int table_index;
+    int col_index;
+    for (int i = 0;i < catalog.table_count;i++){
+        if (strcmp(catalog.tables[i],node->table)==0){
+            table_index = i;
+            break;
+        }
+    }
+    for (int i = 0;i < catalog.tables[table_index]->col_count;i++){
+        if (strcmp(catalog.tables[table_index]->cols->name,node->table)==0){
+            col_index = i;
+            break;
+        }
+    }
+    if (catalog.tables[table_index]->cols[col_index].index==1){
+        printf("index on this column already exists\n");
+        return NULL;
+    }
+    catalog.tables[table_index]->cols[col_index].index=1;
+    save_catalog();
+    char* table_name = malloc(strlen(node->table)+strlen(".idx") + 1);
+    strcpy(table_name,node->table);
+    strcat(table_name,".idx");
     
 }
 int check_num(int num1,int num2,Operator op){

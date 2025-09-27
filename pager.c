@@ -52,3 +52,27 @@ int save_fsm(char* table,FreeSpaceMap* fsm){
     fclose(file);
     return 0;
 }
+IndexPage* load_idx(char* table,int pageno){
+    IndexPage* page = malloc(sizeof(IndexPage));
+    FILE* file = fopen(table,"rb");
+    if (!file){
+        return NULL;
+    }
+    fseek(file,PAGE_SIZE*pageno,SEEK_SET);
+    fread(page,PAGE_SIZE,1,file);
+    fclose(file);
+    return page;
+}
+int save_idx(char* table,IndexPage* page,int pageno){
+    FILE* file = fopen(table,"r+b");
+    if (!file){
+        file = fopen(table,"w+b");
+        if (!file){
+            return -1;
+        }
+    }
+    fseek(file,PAGE_SIZE*pageno,SEEK_SET);
+    fwrite(page,PAGE_SIZE,1,file);
+    fclose(file);
+    return 0;
+}

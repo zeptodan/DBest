@@ -140,11 +140,11 @@ ASTnode* parse_create(Parser* parser){
         }
         ast->createindex.column = token->data.value;
         token = advance(parser);
-        if (token != TOKEN_RIGHTPAREN){
+        if (token->type != TOKEN_RIGHTPAREN){
             return NULL;
         }
         token = advance(parser);
-        if (token != TOKEN_SEMI){
+        if (token->type != TOKEN_SEMI){
             return NULL;
         }
         return ast;

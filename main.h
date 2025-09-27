@@ -188,6 +188,35 @@ typedef struct {
     int entry_count;
     FreeSpaceEntry* entries;
 } FreeSpaceMap;
+typedef enum {
+    LEAF_NODE,
+    INTERNAL_NODE
+} BNodeType;
+typedef struct {
+    short key_len;
+    short offset;
+    int page_id;
+} IndexSlot;
+typedef struct {
+    char* key;
+    int child_page_id;
+} InternalEntry;
+typedef struct {
+    char* key;
+    int table_page_id;
+    int slot_id;
+} LeafEntry;
+typedef struct {
+    BNodeType type;
+    int page_id;
+    int slot_count;
+    int free_space_offset;
+    int next_page;
+} IndexHeader;
+typedef struct {
+    IndexHeader header;
+    char bytes[PAGE_SIZE - sizeof(IndexHeader)];
+} IndexPage;
 extern Catalog catalog;
 ASTnode* parser(InputBuffer* buffer);
 Statement* tokenizer(InputBuffer* buffer);
@@ -202,3 +231,4 @@ Page* load_page(char* table,int pageno);
 int save_page(char* table,int pageno,Page* page);
 FreeSpaceMap* load_fsm(char* table);
 int save_fsm(char* table,FreeSpaceMap* fsm);
+int create_index(Createindexnode* node);
