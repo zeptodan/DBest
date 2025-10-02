@@ -113,6 +113,7 @@ typedef struct {
 } Insertnode;
 typedef struct {
     char* name;
+    char* index_name;
     Keyword type;
     int index;
 } Column;
@@ -195,7 +196,6 @@ typedef enum {
 typedef struct {
     short key_len;
     short offset;
-    int page_id;
 } IndexSlot;
 typedef struct {
     char* key;
@@ -232,3 +232,5 @@ int save_page(char* table,int pageno,Page* page);
 FreeSpaceMap* load_fsm(char* table);
 int save_fsm(char* table,FreeSpaceMap* fsm);
 int create_index(Createindexnode* node);
+IndexPage* load_idx(char* table,int pageno);
+int save_idx(char* table,IndexPage* page,int pageno);

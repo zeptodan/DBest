@@ -53,6 +53,9 @@ void load_catalog(){
             fread(&len2,sizeof(size_t),1,file);
             catalog.tables[i]->cols[j].name = malloc(len2 * sizeof(char));
             fread(catalog.tables[i]->cols[j].name,sizeof(char),len2,file);
+            fread(&len2,sizeof(size_t),1,file);
+            catalog.tables[i]->cols[j].index_name = malloc(len2 * sizeof(char));
+            fread(catalog.tables[i]->cols[j].index_name,sizeof(char),len2,file);
         }
     }
     fclose(file);
@@ -76,6 +79,9 @@ void save_catalog(){
             size_t len2  = strlen(catalog.tables[i]->cols[j].name)+1;
             fwrite(&len2,sizeof(size_t),1,file);
             fwrite(catalog.tables[i]->cols[j].name,sizeof(char),len2,file);
+            len2  = strlen(catalog.tables[i]->cols[j].index_name)+1;
+            fwrite(&len2,sizeof(size_t),1,file);
+            fwrite(catalog.tables[i]->cols[j].index_name,sizeof(char),len2,file);
         }
     }
     fclose(file);

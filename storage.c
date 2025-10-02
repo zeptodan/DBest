@@ -11,6 +11,178 @@ int create_table(Createnode* node){
     catalog.tables[catalog.table_count-1] = table;
     save_catalog();
 }
+char* get_value(Page* page,int table_no, int col_no,int i){
+    Slot* slot = (Slot*)((char*)page + PAGE_SIZE - sizeof(Slot)*(i+1));
+    int offset = 0;
+    for (int j = 0; j < col_no;j++){
+        if (catalog.tables[table_no]->cols[j].type == Int){
+            offset += sizeof(int);
+        }
+        else{
+            int val = *(int*)((char*)page + offset +slot->offset);
+            offset += sizeof(int) + val;
+        }
+    }
+    char* val;
+    if (catalog.tables[table_no]->cols[col_no].type == Int){
+        val = malloc(sizeof(int));
+        memcpy(val,(char*)page + offset +slot->offset,sizeof(int));
+    }
+    else{
+        int len = *(int*)((char*)page + offset +slot->offset);
+        val= malloc(len+1);
+        memcpy(val,(char*)page + offset +slot->offset + sizeof(int),len);
+        val[len] = '\0';
+    }
+    return val;
+}
+char* traverse_index(char* table_name,int pageno,char* value,Keyword type,int heap_page,int slotno){
+    IndexPage* page = load_idx(table_name,pageno);
+    int free_bytes = PAGE_SIZE - page->header.free_space_offset - page->header.slot_count * sizeof(IndexSlot);
+    if (page->header.type == LEAF_NODE){
+        if(free_bytes < strlen(value) + 2*sizeof(int) + sizeof(IndexSlot)){
+
+        }
+        int index;
+        for(int i =0; i < page->header.slot_count;i++){
+            IndexSlot* slot = (char*) page + PAGE_SIZE - (page->header.slot_count - i) * sizeof(IndexSlot);
+            if (type == Int){
+                int val;
+                memcpy(&val,(char*) page + slot->offset,sizeof(int));
+                if (atoi(value) <= val){
+                    index = i;
+                    break;
+                }
+                else{
+                    memcpy(slot -1,slot,sizeof(IndexSlot));
+                }
+            }
+            else{
+                char* val = malloc(slot->key_len+1);
+                memcpy(&val,(char*) page + slot->offset,sizeof(slot->key_len));
+                val[slot->key_len] = '\0';
+                if (strcmp(value,val) <= 0){
+                    index = i;
+                    break;
+                }
+                else{
+                    memcpy(slot -1,slot,sizeof(IndexSlot));
+                }
+            }
+            if(i == page->header.slot_count - 1){
+                index = page->header.slot_count;
+            }
+        }
+        IndexSlot* slot = (char*) page + PAGE_SIZE - (page->header.slot_count - index + 1) * sizeof(IndexSlot);
+        if (type == Int){
+            slot->offset = page->header.free_space_offset;
+            int int_val = atoi(value);
+            memcpy((char*) page + slot->offset,&int_val,sizeof(int));
+            memcpy((char*) page + slot->offset + sizeof(int),&heap_page,sizeof(int));
+            memcpy((char*) page + slot->offset + 2*sizeof(int),&slotno,sizeof(int));
+            page->header.free_space_offset += 3*sizeof(int);
+            page->header.slot_count++;
+        }
+        else{
+            slot->offset = page->header.free_space_offset;
+            slot->key_len = strlen(value);
+            memcpy(slot->offset,value,slot->key_len);
+            memcpy((char*) page + slot->offset + slot->key_len,&heap_page,sizeof(int));
+            memcpy((char*) page + slot->offset + slot->key_len + sizeof(int),&slotno,sizeof(int));
+            page->header.free_space_offset += slot->key_len + 2*sizeof(int);
+            page->header.slot_count++;
+        }
+    }
+    else{
+        if(free_bytes < strlen(value) + 2*sizeof(int) + sizeof(IndexSlot)){
+
+        }
+        int index;
+        for(int i =0; i < page->header.slot_count;i++){
+            IndexSlot* slot = (char*) page + PAGE_SIZE - (page->header.slot_count - i) * sizeof(IndexSlot);
+            if (type == Int){
+                int val;
+                memcpy(&val,(char*) page + slot->offset,sizeof(int));
+                if (atoi(value) <= val){
+                    index = i;
+                    break;
+                }
+            }
+            else{
+                char* val = malloc(slot->key_len+1);
+                memcpy(&val,(char*) page + slot->offset,sizeof(slot->key_len));
+                val[slot->key_len] = '\0';
+                if (strcmp(value,val) <= 0){
+                    index = i;
+                    break;
+                }
+            }
+            if(i == page->header.slot_count - 1){
+                index = page->header.slot_count;
+            }
+        }
+        char* value_to_insert;
+        if (index == 0){
+            value_to_insert = traverse_index(table_name,page->header.next_page,value,type,heap_page,slotno);
+        }
+        else{
+            IndexSlot* slot = (char*) page + PAGE_SIZE - (page->header.slot_count - index + 1) * sizeof(IndexSlot);
+            InternalEntry* entry = (char*) page + slot->offset;
+            value_to_insert = traverse_index(table_name,entry->child_page_id,value,type,heap_page,slotno);
+        }
+        if(value_to_insert != NULL){
+            int free_bytes = PAGE_SIZE - page->header.free_space_offset - page->header.slot_count * sizeof(IndexSlot);
+            if(free_bytes < strlen(value) + sizeof(int) + sizeof(IndexSlot)){
+
+            }
+            IndexSlot* slot = (char*) page + PAGE_SIZE - (page->header.slot_count - index + 1) * sizeof(IndexSlot);
+            if (type == Int){
+                slot->offset = page->header.free_space_offset;
+                int int_val = atoi(value);
+                memcpy((char*) page + slot->offset,&int_val,sizeof(int));
+                //memcpy((char*) page + slot->offset + sizeof(int),&heap_page,sizeof(int));
+                page->header.free_space_offset += 2*sizeof(int);
+                page->header.slot_count++;
+            }
+            else{
+                slot->offset = page->header.free_space_offset;
+                slot->key_len = strlen(value);
+                memcpy(slot->offset,value,slot->key_len);
+                //memcpy((char*) page + slot->offset + slot->key_len,&heap_page,sizeof(int));
+                page->header.free_space_offset += slot->key_len + sizeof(int);
+                page->header.slot_count++;
+            }
+        }
+    }
+}
+int insert_into_index(char* table_name,char* value,Keyword type,int insert_page,int insert_slot){
+    FILE* file = fopen(table_name,"rb");
+    fseek(file,0,SEEK_END);
+    int total_pages = ftell(file) / PAGE_SIZE;
+    fclose(file);
+    if (total_pages == 0){
+        IndexPage* page = malloc(sizeof(IndexPage));
+        page->header.free_space_offset = sizeof(IndexHeader);
+        page->header.page_id = 0;
+        page->header.next_page = -1;
+        page->header.slot_count = 0;
+        page->header.type = LEAF_NODE;
+        save_idx(table_name,page,0);
+        free(page);
+    }
+    traverse_index(table_name,0,value,type,insert_page,insert_slot);
+    IndexPage* page = load_idx(table_name,0);
+    if (PAGE_SIZE - page->header.free_space_offset - sizeof(IndexSlot) * page->header.slot_count)
+    for(int i =0; i < page->header.slot_count;i++){
+        IndexSlot* slot = (char*) page + PAGE_SIZE - (page->header.slot_count - i) * sizeof(IndexSlot);
+        if (type == Int){
+
+        }
+        else{
+            
+        }
+    }
+}
 int create_index(Createindexnode* node){
     int table_index;
     int col_index;
@@ -32,10 +204,24 @@ int create_index(Createindexnode* node){
     }
     catalog.tables[table_index]->cols[col_index].index=1;
     save_catalog();
-    char* table_name = malloc(strlen(node->table)+strlen(".idx") + 1);
+    char* table_idx_name = malloc(strlen(node->table)+strlen(".idx") + 1);
+    strcpy(table_idx_name,node->table);
+    strcat(table_idx_name,".idx");
+    char* table_name = malloc(strlen(node->table)+strlen(".db") + 1);
     strcpy(table_name,node->table);
-    strcat(table_name,".idx");
-    
+    strcat(table_name,".db");
+    FILE* file = fopen(table_name,"rb");
+    fseek(file,0,SEEK_END);
+    int total_pages = ftell(file) / PAGE_SIZE;
+    fclose(file);
+    for (int i = 0; i < total_pages;i++){
+        Page* page = load_page(table_name,i);
+        for (int j =0;j < page->header.slot_count;j++){
+            char* value = get_value(page,table_index,col_index,j);
+            insert_into_index(table_idx_name,value,catalog.tables[table_index]->cols[col_index].type,i,j);
+        }
+    }
+    return 0;
 }
 int check_num(int num1,int num2,Operator op){
     switch(op){
@@ -180,6 +366,9 @@ int select_data(Selectnode* node){
         select_page(page,node);
     }
 }
+int select_data_from_index(){
+
+}
 Slot* get_slot(Page* page,int byte_size){
     for (int i = 0;i< page->header.slot_count;i++){
         Slot* slot = (Slot*)((char*)page + PAGE_SIZE - sizeof(Slot)*(i + 1));
@@ -194,10 +383,23 @@ Slot* get_slot(Page* page,int byte_size){
 }
 int insert_record(Insertnode* node,Page* page, Slot* slot,char* table){
     int offset = 0;
+    int table_idx;
+    for (int i = 0; i < catalog.table_count;i++){
+        if(strcmp(node->table,catalog.tables[i]->table_name)==0){
+            table_idx = i;
+            break;
+        }
+    }
     for (int i =0; i < node->col_count;i++){
         if (node->cols[i]->type == NUMBER){
             memcpy((char*)page + slot->offset + offset,&node->cols[i]->int_value,sizeof(int));
             offset += sizeof(int);
+            if (catalog.tables[table_idx]->cols[i].index==1){
+                char* table_idx_name = malloc(strlen(catalog.tables[table_idx]->cols[i].index_name)+strlen(".idx") + 1);
+                strcpy(table_idx_name,catalog.tables[table_idx]->cols[i].index_name);
+                strcat(table_idx_name,".idx");
+                insert_into_index(table_idx_name,&node->cols[i]->int_value,catalog.tables[table_idx]->cols[i].type,page->header.page_id,page->header.slot_count);
+            }
         }
         else{
             short len = strlen(node->cols[i]->value);
@@ -205,6 +407,12 @@ int insert_record(Insertnode* node,Page* page, Slot* slot,char* table){
             offset += sizeof(short);
             memcpy((char*)page + slot->offset + offset,node->cols[i]->value,len);
             offset+=len;
+            if (catalog.tables[table_idx]->cols[i].index==1){
+                char* table_idx_name = malloc(strlen(catalog.tables[table_idx]->cols[i].index_name)+strlen(".idx") + 1);
+                strcpy(table_idx_name,catalog.tables[table_idx]->cols[i].index_name);
+                strcat(table_idx_name,".idx");
+                insert_into_index(table_idx_name,node->cols[i]->value,catalog.tables[table_idx]->cols[i].type,page->header.page_id,page->header.slot_count);
+            }
         }
     }
     return save_page(table,page->header.page_id,page);
