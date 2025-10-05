@@ -6,6 +6,7 @@ int executor(Planner* planner){
         select_data(&planner->select);
         break;
         case INDEX_PLAN:
+        select_data_from_index(&planner->select);
         break;
         case CREATE_PLAN:
         create_table(&planner->create);

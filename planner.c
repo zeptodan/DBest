@@ -5,6 +5,7 @@ Planner* planner(ASTnode* ast){
     Planner* planner = malloc(sizeof(Planner));
     switch (ast->token.data.keyword){
         case Select:
+            int has_index = 0;
             for (int i =0;i < catalog.table_count;i++){
                 if (strcmp(catalog.tables[i]->table_name,ast->select.table) ==0){
                     int exists =0;
@@ -33,6 +34,9 @@ Planner* planner(ASTnode* ast){
                                     printf("expected string in where clause");
                                     return NULL;
                                 }
+                                if (catalog.tables[i]->cols[j].index == 1){
+                                    has_index =1;
+                                }
                                 exists = 1;
                                 break;
                             }
@@ -48,6 +52,9 @@ Planner* planner(ASTnode* ast){
                 }
             }
             planner->type = SEQ_PLAN;
+            if (has_index ==1){
+                planner->type = INDEX_PLAN;
+            }
             planner->select = ast->select;
             break;
         case Insert:

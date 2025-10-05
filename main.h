@@ -234,3 +234,4 @@ int save_fsm(char* table,FreeSpaceMap* fsm);
 int create_index(Createindexnode* node);
 IndexPage* load_idx(char* table,int pageno);
 int save_idx(char* table,IndexPage* page,int pageno);
+int select_data_from_index(Selectnode* node);
